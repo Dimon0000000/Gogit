@@ -2,15 +2,14 @@
 
 package cmd
 
-import "os/exec"
+import (
+	"fmt"
+	"os/exec"
+)
 
-const promptScript = `
-function global:prompt {
-    "$([char]27)[36m(Gogit)$([char]27)[0m $($executionContext.SessionState.Path.CurrentLocation)> "
-}
-`
+func systemShell(marker string) *exec.Cmd {
+	script := fmt.Sprintf(`function global:prompt {'%s'}`, marker)
 
-func systemShell() *exec.Cmd {
 	if path, err := exec.LookPath("pwsh.exe"); err == nil {
 		return exec.Command(
 			path,
@@ -18,7 +17,7 @@ func systemShell() *exec.Cmd {
 			"-NoProfile",
 			"-NoExit",
 			"-Command",
-			promptScript,
+			script,
 		)
 	}
 
@@ -28,6 +27,6 @@ func systemShell() *exec.Cmd {
 		"-NoProfile",
 		"-NoExit",
 		"-Command",
-		promptScript,
+		script,
 	)
 }
