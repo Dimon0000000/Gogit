@@ -5,6 +5,8 @@ package cmd
 import (
 	"os"
 	"os/exec"
+
+	"path/filepath"
 )
 
 func systemShell(marker string) *exec.Cmd {
