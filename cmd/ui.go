@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/Haruko386/Gogit/internal/editor"
+	"github.com/Haruko386/Gogit/internal/history"
 	"github.com/Haruko386/Gogit/internal/protocol"
 	"github.com/Haruko386/Gogit/internal/session"
 	"github.com/Haruko386/Gogit/internal/suggest"
@@ -23,11 +24,7 @@ type streamEvent struct {
 	err  error
 }
 
-func runShellUI(
-	shellSession session.ShellSession,
-	marker string,
-	resizeDone <-chan error,
-) (resizeFinished bool, resultErr error) {
+func runShellUI(shellSession session.ShellSession, marker string, resizeDone <-chan error) (resizeFinished bool, resultErr error) {
 	inputEvents := readStream(os.Stdin)
 	outputEvents := readStream(shellSession)
 	shellDone := make(chan error, 1)
@@ -37,12 +34,13 @@ func runShellUI(
 	}()
 
 	var (
-		decoder    terminal.Decoder
-		lineEditor editor.Editor
-		renderer   terminal.Renderer
-		markerScan = protocol.NewScanner(marker)
-		selected   int
-		editing    bool
+		decoder        terminal.Decoder
+		lineEditor     editor.Editor
+		commandHistory history.History
+		renderer       terminal.Renderer
+		markerScan     = protocol.NewScanner(marker)
+		selected       int
+		editing        bool
 	)
 
 	render := func() error {
@@ -124,6 +122,7 @@ func runShellUI(
 					selected = 0
 
 				case terminal.KeyUp:
+					// FIXME: 选择历史指令和选择Tab填充时有冲突(我目前觉得只有空白时才能选择历史；当然后续这个需要复杂的设计)
 					suggestions := suggest.Suggest(
 						lineEditor.Line(),
 						lineEditor.Cursor(),
@@ -133,6 +132,13 @@ func runShellUI(
 						if selected < 0 {
 							selected = len(suggestions) - 1
 						}
+						changed = true
+					}
+
+					command, ok := commandHistory.Previous(lineEditor.Line())
+					if ok {
+						lineEditor.SetLine(command)
+						selected = 0
 						changed = true
 					}
 
@@ -146,6 +152,13 @@ func runShellUI(
 						if selected >= len(suggestions) {
 							selected = 0
 						}
+						changed = true
+					}
+
+					command, ok := commandHistory.Next()
+					if ok {
+						lineEditor.SetLine(command)
+						selected = 0
 						changed = true
 					}
 
@@ -204,7 +217,11 @@ func runShellUI(
 						return false, err
 					}
 
-					command := lineEditor.Line() + "\r"
+					command := lineEditor.Line()
+					// save command to history
+					commandHistory.Add(command)
+					command += "\r"
+
 					if err := writeAll(
 						shellSession,
 						[]byte(command),
@@ -216,6 +233,7 @@ func runShellUI(
 					}
 
 					lineEditor.Clear()
+					commandHistory.Reset()
 					selected = 0
 					editing = false
 					changed = false

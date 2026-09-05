@@ -57,3 +57,91 @@ func TestSuggestUsesCursorPrefix(t *testing.T) {
 		t.Fatalf("Suggest() = %#v, want --show-current", got)
 	}
 }
+
+func TestSuggestsCommonSubcommands(t *testing.T) {
+	tests := []struct {
+		line string
+		want string
+	}{
+		{line: "git sta", want: "status"},
+		{line: "git com", want: "commit"},
+		{line: "git swi", want: "switch"},
+		{line: "git reb", want: "rebase"},
+	}
+
+	for _, test := range tests {
+		t.Run(test.line, func(t *testing.T) {
+			got := Suggest(
+				test.line,
+				len([]rune(test.line)),
+			)
+
+			if len(got) != 1 {
+				t.Fatalf(
+					"Suggest(%q) returned %d candidates: %#v",
+					test.line,
+					len(got),
+					got,
+				)
+			}
+			if got[0].Value != test.want {
+				t.Fatalf(
+					"Suggest(%q) = %q, want %q",
+					test.line,
+					got[0].Value,
+					test.want,
+				)
+			}
+		})
+	}
+}
+
+func TestSuggestsCommonOptions(t *testing.T) {
+	tests := []struct {
+		line string
+		want string
+	}{
+		{
+			line: "git status --sh",
+			want: "--short",
+		},
+		{
+			line: "git commit --am",
+			want: "--amend",
+		},
+		{
+			line: "git switch --cr",
+			want: "--create",
+		},
+		{
+			line: "git log --gra",
+			want: "--graph",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.line, func(t *testing.T) {
+			got := Suggest(
+				test.line,
+				len([]rune(test.line)),
+			)
+
+			if len(got) != 1 {
+				t.Fatalf(
+					"Suggest(%q) returned %d candidates: %#v",
+					test.line,
+					len(got),
+					got,
+				)
+			}
+			if got[0].Value != test.want {
+				t.Fatalf(
+					"Suggest(%q) = %q, want %q",
+					test.line,
+					got[0].Value,
+					test.want,
+				)
+			}
+		})
+	}
+}
