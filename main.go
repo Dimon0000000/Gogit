@@ -1,7 +1,15 @@
 package main
 
-import "github.com/Haruko386/Gogit/cmd"
+import (
+	"fmt"
+	"os"
+
+	"github.com/Haruko386/Gogit/cmd"
+)
 
 func main() {
-	cmd.Run()
+	if err := cmd.Run(); err != nil {
+		fmt.Fprintf(os.Stderr, "Gogit: %v\n", err)
+		os.Exit(1)
+	}
 }
