@@ -63,7 +63,7 @@ func TestSuggestsCommonSubcommands(t *testing.T) {
 		line string
 		want string
 	}{
-		{line: "git sta", want: "status"},
+		{line: "git stat", want: "status"},
 		{line: "git com", want: "commit"},
 		{line: "git swi", want: "switch"},
 		{line: "git reb", want: "rebase"},
@@ -93,6 +93,20 @@ func TestSuggestsCommonSubcommands(t *testing.T) {
 				)
 			}
 		})
+	}
+}
+
+func TestSuggestsAmbiguousPrefix(t *testing.T) {
+	got := Suggest("git sta", len([]rune("git sta")))
+	want := []string{"status", "stash"}
+
+	if len(got) != len(want) {
+		t.Fatalf("Suggest(\"git sta\") returned %d candidates: %#v", len(got), got)
+	}
+	for index, value := range want {
+		if got[index].Value != value {
+			t.Fatalf("candidate %d = %q, want %q", index, got[index].Value, value)
+		}
 	}
 }
 
