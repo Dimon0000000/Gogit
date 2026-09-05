@@ -13,7 +13,14 @@ func systemShell(marker string) *exec.Cmd {
 		shell = "/bin/sh"
 	}
 
-	command := exec.Command(shell, "-i")
+	arguments := []string{"-i"}
+	switch filepath.Base(shell) {
+	case "bash":
+		arguments = []string{"--norc", "-i"}
+	case "zsh":
+		arguments = []string{"--f", "-i"}
+	}
+	command := exec.Command(shell, arguments...)
 	command.Env = append(os.Environ(), "PS1="+marker)
 	return command
 }
