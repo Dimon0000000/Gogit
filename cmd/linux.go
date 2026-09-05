@@ -7,10 +7,13 @@ import (
 	"os/exec"
 )
 
-func systemShell() *exec.Cmd {
+func systemShell(marker string) *exec.Cmd {
 	shell := os.Getenv("SHELL")
 	if shell == "" {
 		shell = "/bin/sh"
 	}
-	return exec.Command(shell, "-i")
+
+	command := exec.Command(shell, "-i")
+	command.Env = append(os.Environ(), "PS1="+marker)
+	return command
 }
