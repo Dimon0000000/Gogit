@@ -39,16 +39,16 @@ Git 和其他系统程序
 - Linux/macOS：Unix PTY；
 - Gogit 上层只依赖统一的会话接口，不直接依赖平台细节。
 
-## 3. 技术选型检查点
+## 3. 当前技术基线
 
-计划优先考察 `github.com/charmbracelet/x/xpty`。它提供跨平台 PTY 接口，在 Windows 使用 ConPTY，在 Unix 系统使用 Unix PTY。
+项目的 `go.mod` 当前面向 Go 1.25.0，并直接依赖 `github.com/charmbracelet/x/xpty` v0.1.4。`cmd/root.go` 已接入持久 PTY Shell：上层通过 `session.ShellSession` 工作，内部实现为基于 xpty 的 `ptySession`；Windows 使用 ConPTY，Linux/macOS 使用 Unix PTY。
 
 需要注意：
 
 - 该项目明确将 `x` 仓库中的包定义为实验性包，不保证向后兼容；
-- 截至 2026-09-04，`xpty` 当前版本要求 Go 1.25；
-- 当前 Gogit 的 `go.mod` 和本机工具链是 Go 1.23；
-- 因此正式添加依赖前，必须由开发者明确选择“升级 Go”或“研究兼容 Go 1.23 的旧版本”；不能不检查版本就直接安装。
+- 当前版本要求 Go 1.25；
+- 集成后需要持续验证 Shell 生命周期、错误传播、终端恢复和窗口 resize；
+- Git 自动补全仍是后续计划功能。
 
 备选库是 `github.com/aymanbagabas/go-pty`，它同样支持 Unix PTY 和 Windows ConPTY，但当前版本也要求 Go 1.25。
 
@@ -303,14 +303,13 @@ PTY 天然涉及并发：一边等待键盘输入，一边持续读取 Shell 输
 
 ## 9. 当前下一步
 
-从“阶段 1：纯 PTY 透传实验”开始，但第一小步只做技术准备：
+当前持久 PTY 基线已经完成，下一步按以下顺序推进：
 
-1. 查看当前 Go 版本和 `go.mod`；
-2. 决定是否把项目升级到 Go 1.25；
-3. 明确第一轮只验证 Windows，还是同时验证 Linux；
-4. 决策后再由开发者本人添加 PTY 依赖。
-
-在这个决策完成前，不修改当前执行器，也不删除现有的 `root.go`、`windows.go` 和 `linux.go`。旧实现将作为可以随时运行和对照的基线。
+1. 完成 `ptySession` 的并发生命周期与子进程回收；
+2. 传播终端输入、输出和恢复错误；
+3. 将宿主终端 resize 转发给 PTY；
+4. 为生命周期和错误路径增加测试；
+5. 再进入行编辑器和 Git 自动补全。
 
 ## 10. 参考资料
 
