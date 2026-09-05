@@ -1,14 +1,23 @@
-# Gogit
+<div align="center"><h1><b>Gogit</b></h1></div>
 
-> Git is easy.
->
-> Until your mentor asks you to do something with it.
+![Gogit](https://socialify.git.ci/Haruko386/Gogit/image?custom_language=Go&description=1&font=Source+Code+Pro&forks=1&issues=1&language=1&name=1&owner=1&pattern=Floating+Cogs&pulls=1&stargazers=1&theme=Auto)
 
-Imagine this.
+<div align="center">
+    <img height="32" src="https://cdn.simpleicons.org/go">
+    <img height="32" src="https://cdn.simpleicons.org/git">
+    <img height="32" src="https://cdn.simpleicons.org/github">
+</div>
+
+<div align="center">
+
+[![Typing SVG](https://readme-typing-svg.demolab.com?font=JetBrains+Mono&size=22&duration=4500&pause=1400&color=728295&center=true&vCenter=true&repeat=false&width=435&lines=Git+is+easy+until+you+use+it+%3A%28)](https://git.io/typing-svg)
+</div>
+
+### Imagine this:
 
 You just started your first internship as a developer.
 
-Day one:
+#### Day one:
 
 ```bash
 git clone ...
@@ -16,7 +25,9 @@ git clone ...
 
 Easy.
 
-Day two:
+---
+
+#### Day two:
 
 ```bash
 git checkout -b feat/something
@@ -24,10 +35,12 @@ git checkout -b feat/something
 
 Still easy.
 
-Then one day, your mentor walks over and says:
+---
 
-> "Main has moved forward. Rebase your commits onto the latest main,
-> resolve the conflicts, continue the rebase, and update your remote branch safely."
+#### Then one day, your mentor walks over:
+
+> "Main has moved forward. Rebase your commits onto the latest main,  
+> resolve the conflicts, and update your remote branch safely."
 
 You:
 
@@ -37,17 +50,9 @@ Your brain:
 
 > **What the hell is a rebase?**
 
-So you start searching.
+So you search Google, Stack Overflow, GitHub — or just ask **`ChatGPT`**.
 
-Google.
-
-Stack Overflow.
-
-GitHub.
-
-AI.
-
-`1` minutes later, you somehow assemble this:
+A minute later, you somehow end up with:
 
 ```bash
 git fetch origin
@@ -60,13 +65,15 @@ git rebase --continue
 git push --force-with-lease
 ```
 
-It works.
+It works!!!
 
-For a brief moment, you believe you understand Git.
+For a brief moment, you think you understand Git.
 
-Then the next day your mentor says:
+----
 
-> "Actually, remove yesterday's commit, but keep the changes in your working tree."
+#### Until the next day:
+
+> "Remove yesterday's commit, but keep the changes in your working tree."
 
 You stare at the terminal.
 
@@ -74,41 +81,34 @@ You stare at the terminal.
 git reset ???
 ```
 
-`--soft`?
+`--soft`? `--mixed`? `--hard`?
 
-`--mixed`?
-
-`--hard`?
-
-Three minutes ago you were a software engineer.
-
-Now you're Googling:
+And somehow you're back to searching:
 
 > **difference between git reset soft mixed hard**
 
 ---
 
-This was basically my experience while interning on
-**infiniflow/ragflow**.
+This was basically my experience while interning on **[infiniflow/ragflow](https://github.com/infiniflow/ragflow)**.
 
-Git doesn't have a shortage of commands.
-
+Git doesn't have a shortage of commands.  
 If anything, it has **way too many of them**.
 
-The problem is usually not:
+Usually, the problem isn't:
 
 > "I don't know what I want to do."
 
-The problem is:
+It's:
 
-> "I know exactly what I want to do,
-> but I have absolutely no idea what that damn flag is called."
+> "I know exactly what I want to do.  
+> I just don't know what that damn Git command is called."
 
-So I built **Gogit**.
+So I built **Gogit** — because memorizing Git commands shouldn't be part of the job.
+At least not for a beginner
 
 ---
 
-## What is Gogit?
+<div align="center"><h1><b>What is Gogit?</b></h1></div>
 
 **Gogit** is a Git CLI assistant written in Go.
 
@@ -122,7 +122,7 @@ git branch --sho|
 
 and wondering what comes next.
 
-Gogit can suggest:
+Gogit is planned to suggest:
 
 ```text
 --show-current
@@ -178,8 +178,8 @@ I know what I want to do
 
 ## The Idea
 
-While you type a Git command, Gogit understands the current context
-and suggests available options.
+The planned autocomplete will understand the current Git command context
+and suggest available options while you type.
 
 For example:
 
@@ -239,7 +239,7 @@ It's stopping you for half a second before you do it.
 
 ---
 
-## Why "Gogit"?
+<div align="center"><h1><b>Why "Gogit"?</b></h1></div>
 
 Because it's written in **Go**.
 
@@ -253,7 +253,13 @@ Yes.
 
 I spent considerably more time Googling Git commands than naming this project.
 
-> [!Warning]
-> If you use agent to operate git, bro, this is not what you need.
-> just use you agent and abandon your brain. Be a nerd only use AI to code and commit.
-> (I'm not mean AI is harmful, I just think we should not let AI do everything, so that we won't forget something basic)
+---
+
+
+
+> [!important]
+> If you use **agent** to operate git, bro, this is not what you need.
+> 
+> Just use your agent and let your brain go to waste.
+> 
+> (I'm not mean AI is harmful or that I want to ban it, I just think we should not let AI do everything, so that we won't forget something basic skill)
