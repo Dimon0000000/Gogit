@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/Haruko386/Gogit/internal/editor"
+	"github.com/Haruko386/Gogit/internal/history"
 	"github.com/Haruko386/Gogit/internal/protocol"
 	"github.com/Haruko386/Gogit/internal/session"
 	"github.com/Haruko386/Gogit/internal/suggest"
@@ -23,11 +24,7 @@ type streamEvent struct {
 	err  error
 }
 
-func runShellUI(
-	shellSession session.ShellSession,
-	marker string,
-	resizeDone <-chan error,
-) (resizeFinished bool, resultErr error) {
+func runShellUI(shellSession session.ShellSession, marker string, resizeDone <-chan error) (resizeFinished bool, resultErr error) {
 	inputEvents := readStream(os.Stdin)
 	outputEvents := readStream(shellSession)
 	shellDone := make(chan error, 1)
@@ -37,12 +34,13 @@ func runShellUI(
 	}()
 
 	var (
-		decoder    terminal.Decoder
-		lineEditor editor.Editor
-		renderer   terminal.Renderer
-		markerScan = protocol.NewScanner(marker)
-		selected   int
-		editing    bool
+		decoder        terminal.Decoder
+		lineEditor     editor.Editor
+		commandHistory history.History
+		renderer       terminal.Renderer
+		markerScan     = protocol.NewScanner(marker)
+		selected       int
+		editing        bool
 	)
 
 	render := func() error {
@@ -128,27 +126,15 @@ func runShellUI(
 						lineEditor.Line(),
 						lineEditor.Cursor(),
 					)
-					if len(suggestions) > 0 {
-						selected--
-						if selected < 0 {
-							selected = len(suggestions) - 1
-						}
-						changed = true
-					}
 
+					changed = navigateUp(&lineEditor, &commandHistory, suggestions, &selected) || changed
 				case terminal.KeyDown:
 					suggestions := suggest.Suggest(
 						lineEditor.Line(),
 						lineEditor.Cursor(),
 					)
-					if len(suggestions) > 0 {
-						selected++
-						if selected >= len(suggestions) {
-							selected = 0
-						}
-						changed = true
-					}
 
+					changed = navigateDown(&lineEditor, &commandHistory, suggestions, &selected) || changed
 				case terminal.KeyTab:
 					suggestions := suggest.Suggest(
 						lineEditor.Line(),
@@ -204,7 +190,11 @@ func runShellUI(
 						return false, err
 					}
 
-					command := lineEditor.Line() + "\r"
+					command := lineEditor.Line()
+					// save command to history
+					commandHistory.Add(command)
+					command += "\r"
+
 					if err := writeAll(
 						shellSession,
 						[]byte(command),
@@ -216,6 +206,7 @@ func runShellUI(
 					}
 
 					lineEditor.Clear()
+					commandHistory.Reset()
 					selected = 0
 					editing = false
 					changed = false
@@ -290,6 +281,44 @@ func runShellUI(
 			return true, nil
 		}
 	}
+}
+
+func navigateUp(lineEditor *editor.Editor, commandHistory *history.History, suggestions []suggest.Suggestion, selected *int) bool {
+	if len(suggestions) > 0 {
+		*selected--
+		if *selected < 0 {
+			*selected = len(suggestions) - 1
+		}
+		return true
+	}
+
+	command, ok := commandHistory.Previous(lineEditor.Line())
+	if !ok {
+		return false
+	}
+
+	lineEditor.SetLine(command)
+	*selected = 0
+	return true
+}
+
+func navigateDown(lineEditor *editor.Editor, commandHistory *history.History, suggestions []suggest.Suggestion, selected *int) bool {
+	if len(suggestions) > 0 {
+		*selected++
+		if *selected >= len(suggestions) {
+			*selected = 0
+		}
+		return true
+	}
+
+	command, ok := commandHistory.Next()
+	if !ok {
+		return false
+	}
+
+	lineEditor.SetLine(command)
+	*selected = 0
+	return true
 }
 
 func readStream(reader io.Reader) <-chan streamEvent {

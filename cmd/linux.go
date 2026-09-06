@@ -20,7 +20,7 @@ func systemShell(marker string) *exec.Cmd {
 	case "bash":
 		arguments = []string{"--norc", "-i"}
 	case "zsh":
-		arguments = []string{"--f", "-i"}
+		arguments = []string{"-f", "-i"}
 	}
 	command := exec.Command(shell, arguments...)
 	command.Env = append(os.Environ(), "PS1="+marker)
