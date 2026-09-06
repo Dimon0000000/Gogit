@@ -122,46 +122,19 @@ func runShellUI(shellSession session.ShellSession, marker string, resizeDone <-c
 					selected = 0
 
 				case terminal.KeyUp:
-					// FIXME: 选择历史指令和选择Tab填充时有冲突(我目前觉得只有空白时才能选择历史；当然后续这个需要复杂的设计)
 					suggestions := suggest.Suggest(
 						lineEditor.Line(),
 						lineEditor.Cursor(),
 					)
-					if len(suggestions) > 0 {
-						selected--
-						if selected < 0 {
-							selected = len(suggestions) - 1
-						}
-						changed = true
-					}
 
-					command, ok := commandHistory.Previous(lineEditor.Line())
-					if ok {
-						lineEditor.SetLine(command)
-						selected = 0
-						changed = true
-					}
-
+					changed = navigateUp(&lineEditor, &commandHistory, suggestions, &selected) || changed
 				case terminal.KeyDown:
 					suggestions := suggest.Suggest(
 						lineEditor.Line(),
 						lineEditor.Cursor(),
 					)
-					if len(suggestions) > 0 {
-						selected++
-						if selected >= len(suggestions) {
-							selected = 0
-						}
-						changed = true
-					}
 
-					command, ok := commandHistory.Next()
-					if ok {
-						lineEditor.SetLine(command)
-						selected = 0
-						changed = true
-					}
-
+					changed = navigateDown(&lineEditor, &commandHistory, suggestions, &selected) || changed
 				case terminal.KeyTab:
 					suggestions := suggest.Suggest(
 						lineEditor.Line(),
@@ -308,6 +281,44 @@ func runShellUI(shellSession session.ShellSession, marker string, resizeDone <-c
 			return true, nil
 		}
 	}
+}
+
+func navigateUp(lineEditor *editor.Editor, commandHistory *history.History, suggestions []suggest.Suggestion, selected *int) bool {
+	if len(suggestions) > 0 {
+		*selected--
+		if *selected < 0 {
+			*selected = len(suggestions) - 1
+		}
+		return true
+	}
+
+	command, ok := commandHistory.Previous(lineEditor.Line())
+	if !ok {
+		return false
+	}
+
+	lineEditor.SetLine(command)
+	*selected = 0
+	return true
+}
+
+func navigateDown(lineEditor *editor.Editor, commandHistory *history.History, suggestions []suggest.Suggestion, selected *int) bool {
+	if len(suggestions) > 0 {
+		*selected++
+		if *selected >= len(suggestions) {
+			*selected = 0
+		}
+		return true
+	}
+
+	command, ok := commandHistory.Next()
+	if !ok {
+		return false
+	}
+
+	lineEditor.SetLine(command)
+	*selected = 0
+	return true
 }
 
 func readStream(reader io.Reader) <-chan streamEvent {
