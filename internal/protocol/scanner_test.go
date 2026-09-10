@@ -67,7 +67,7 @@ func TestScannerDoesNotDiscardFalsePrefix(t *testing.T) {
 	}
 }
 
-func TestScannerFlushesPendingBytes(t *testing.T) {
+func TestScannerFlushDoesNotExposePartialMarker(t *testing.T) {
 	marker := "__READY__"
 	scanner := NewScanner(marker)
 	begin := BeginMarker(marker)
@@ -82,8 +82,77 @@ func TestScannerFlushesPendingBytes(t *testing.T) {
 	}
 
 	remaining := scanner.Flush()
-	if string(remaining) != partial {
-		t.Fatalf("remaining output = %q", remaining)
+	if len(remaining) != 0 {
+		t.Fatalf("partial protocol marker was exposed: %q", remaining)
+	}
+}
+
+func TestScannerResynchronizesAtNestedBeginMarker(t *testing.T) {
+	marker := "__READY__"
+	scanner := NewScanner(marker)
+	corrupt := BeginMarker(marker) + "damaged frame"
+	valid := promptFrame(marker, "base", "/repo")
+
+	visible, prompts := scanner.Push([]byte(corrupt + valid))
+	if len(visible) != 0 {
+		t.Fatalf("protocol data became visible: %q", visible)
+	}
+	if len(prompts) != 1 || prompts[0].Directory != "/repo" {
+		t.Fatalf("scanner did not recover: %#v", prompts)
+	}
+}
+
+func TestScannerResynchronizesAtSplitNestedBeginMarker(t *testing.T) {
+	marker := "__READY__"
+	scanner := NewScanner(marker)
+	begin := BeginMarker(marker)
+	split := len(begin) - 3
+
+	visible, prompts := scanner.Push([]byte(
+		begin + "damaged frame" + begin[:split],
+	))
+	if len(visible) != 0 || len(prompts) != 0 {
+		t.Fatalf("first Push() = %q, %#v", visible, prompts)
+	}
+
+	validTail := begin[split:] + "base" + string(rune(fieldSeparator)) +
+		"/repo" + EndMarker(marker)
+	visible, prompts = scanner.Push([]byte(validTail))
+	if len(visible) != 0 {
+		t.Fatalf("protocol data became visible: %q", visible)
+	}
+	if len(prompts) != 1 || prompts[0].Directory != "/repo" {
+		t.Fatalf("scanner did not recover: %#v", prompts)
+	}
+}
+
+func TestScannerDiscardsOversizedFrameWhenEndMarkerIsPresent(t *testing.T) {
+	marker := "__READY__"
+	scanner := NewScanner(marker)
+	oversized := BeginMarker(marker) +
+		string(make([]byte, maxPromptFrameSize+1)) +
+		EndMarker(marker)
+	valid := promptFrame(marker, "base", "/repo")
+
+	visible, prompts := scanner.Push([]byte(oversized + valid))
+	if len(visible) != 0 {
+		t.Fatalf("protocol data became visible: %q", visible)
+	}
+	if len(prompts) != 1 || prompts[0].Directory != "/repo" {
+		t.Fatalf("scanner did not recover after oversized frame: %#v", prompts)
+	}
+}
+
+func TestRecoveryNameIsStableAndShellSafe(t *testing.T) {
+	first := RecoveryName("marker with unsafe-$-characters")
+	second := RecoveryName("marker with unsafe-$-characters")
+	if first != second {
+		t.Fatalf("recovery name is not stable: %q != %q", first, second)
+	}
+	for _, value := range first {
+		if (value < 'a' || value > 'z') && (value < '0' || value > '9') && value != '_' {
+			t.Fatalf("recovery name contains unsafe character %q: %q", value, first)
+		}
 	}
 }
 

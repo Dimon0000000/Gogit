@@ -9,6 +9,8 @@ import (
 	"os"
 	"strings"
 	"time"
+	"unicode"
+	"unicode/utf8"
 
 	"github.com/Haruko386/Gogit/internal/editor"
 	"github.com/Haruko386/Gogit/internal/history"
@@ -34,6 +36,8 @@ type branchLoadResult struct {
 	generation uint64
 	branches   []suggest.Suggestion
 }
+
+type commandWrapper func(string) string
 
 var (
 	bracketedPasteStart = []byte("\x1b[200~")
@@ -66,7 +70,7 @@ func (s *bracketedPasteState) observe(data []byte) {
 	}
 }
 
-func runShellUI(shellSession session.ShellSession, marker string, resizeDone <-chan error) (resizeFinished bool, resultErr error) {
+func runShellUI(shellSession session.ShellSession, marker string, resizeDone <-chan error, wrappers ...commandWrapper) (resizeFinished bool, resultErr error) {
 	inputEvents := readStream(os.Stdin)
 	outputEvents := readStream(shellSession)
 	shellDone := make(chan error, 1)
@@ -93,6 +97,10 @@ func runShellUI(shellSession session.ShellSession, marker string, resizeDone <-c
 		pendingKeys      []terminal.Key
 		pasteState       bracketedPasteState
 	)
+	wrapCommand := commandWrapper(func(command string) string { return command })
+	if len(wrappers) > 0 && wrappers[0] != nil {
+		wrapCommand = wrappers[0]
+	}
 	defer func() {
 		if branchCancel != nil {
 			branchCancel()
@@ -273,7 +281,7 @@ func runShellUI(shellSession session.ShellSession, marker string, resizeDone <-c
 
 				command := lineEditor.Line()
 				commandHistory.Add(command)
-				command += "\r"
+				command = wrapCommand(command) + "\r"
 
 				if err := writeAll(shellSession, []byte(command)); err != nil {
 					return changed, consumed, fmt.Errorf(
@@ -324,6 +332,11 @@ func runShellUI(shellSession session.ShellSession, marker string, resizeDone <-c
 
 			wasPasting := pasteState.active
 			pasteState.observe(event.data)
+
+			if !editing && !wasPasting && isCompleteTypeAhead(event.data) {
+				pendingKeys = append(pendingKeys, decoder.Feed(event.data)...)
+				continue
+			}
 
 			if !editing && !wasPasting {
 				if err := writeAll(shellSession, event.data); err != nil {
@@ -460,6 +473,33 @@ func runShellUI(shellSession session.ShellSession, marker string, resizeDone <-c
 			return true, nil
 		}
 	}
+}
+
+// isCompleteTypeAhead identifies a complete, ordinary command entered while
+// the previous command is still finishing. Control and escape input belongs to
+// an interactive foreground program and must continue directly to the PTY.
+func isCompleteTypeAhead(data []byte) bool {
+	if !utf8.Valid(data) {
+		return false
+	}
+
+	complete := false
+	hasText := false
+	for _, value := range string(data) {
+		switch value {
+		case '\r', '\n':
+			complete = true
+		case '\t', '\b', '\x7f':
+		default:
+			if unicode.IsControl(value) {
+				return false
+			}
+			if !unicode.IsSpace(value) {
+				hasText = true
+			}
+		}
+	}
+	return complete && hasText
 }
 
 func formatPrompt(state protocol.Prompt) (string, int) {
