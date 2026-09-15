@@ -131,102 +131,6 @@ gogit
 This opens the Gogit-assisted shell. Type Git commands normally and press
 `Ctrl+D` on an empty input line when you want to leave Gogit.
 
-It simply tries to help when you're staring at this:
-
-```bash
-git branch --sho|
-```
-
-and wondering what comes next.
-
-Gogit is planned to suggest:
-
-```text
---show-current
-    Print the name of the current branch.
-```
-
-Press `Enter`:
-
-```bash
-git branch --show-current
-```
-
-Done.
-
-No need to:
-
-1. open a browser
-2. search the Git documentation
-3. open Stack Overflow
-4. ask an AI
-5. copy an answer written in 2014
-6. pray it doesn't delete your working tree
-
-The goal is to turn this:
-
-```text
-I know what I want to do
-          ↓
-       git ...
-          ↓
-    Gogit helps
-          ↓
-         Done
-```
-
-instead of this:
-
-```text
-I know what I want to do
-          ↓
-       Google
-          ↓
-   Stack Overflow
-          ↓
-          AI
-          ↓
-  git reset --hard
-          ↓
-    Wait... WHAT?
-```
-
----
-
-## The Idea
-
-The planned autocomplete will understand the current Git command context
-and suggest available options while you type.
-
-For example:
-
-```bash
-git branch --
-```
-
-Gogit may show:
-
-```text
---show-current
-    Show the name of the current branch.
-
---merged
-    List branches already merged into the specified commit.
-
---no-merged
-    List branches that have not yet been merged.
-
---delete
-    Delete a branch.
-```
-
-So instead of only telling you:
-
-> **what you can type**
-
-Gogit also tells you:
-
-> **what the hell it actually does**
 
 For dangerous commands, Gogit should eventually be able to tell you
 that you're about to do something... interesting:
@@ -250,29 +154,7 @@ is not helping you type:
 git reset --hard
 ```
 
-faster.
-
 It's stopping you for half a second before you do it.
-
----
-
-<div align="center"><h1><b>Why "Gogit"?</b></h1></div>
-
-Because it's written in **Go**.
-
-And it's for **Git**.
-
-Go + Git.
-
-**Gogit.**
-
-Yes.
-
-I spent considerably more time Googling Git commands than naming this project.
-
----
-
-
 
 > [!important]
 > If you use **agent** to operate git, bro, this is not what you need.
