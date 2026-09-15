@@ -13,98 +13,48 @@
 [![Typing SVG](https://readme-typing-svg.demolab.com?font=JetBrains+Mono&size=22&duration=4500&pause=1400&color=728295&center=true&vCenter=true&repeat=false&width=435&lines=Git+is+easy+until+you+use+it+%3A%28)](https://git.io/typing-svg)
 </div>
 
-### Imagine this:
+### A little story:
 
-You just started your first internship as a developer.
+> You are an internal in a company, this is your first work since you are an adult.
+>
+> **First day**, you boss told you to `Clone` the company's project from **GitHub** and get familiar with it.
+> You know how to do it, just type:
+> `git clone ...`
+> 
+> **Next day**, you need to submit some `feat` or `fix` **PR** to the upstream branch. Still ok:
+> `git checkout -b feat/something`
+> 
+> **Few days later**, your boos walks over:
+> A contributor's **PR** have conflict, you need to review his code and give him a `suggestion` to resolve the conflict.
+> 
+> Usually, on your local and your own branch, you just type: `git checkout branch` → `git pull upstream main --rebase` → `resolve the conflict in local` and `git push --force-with-lease origin branch`
+> 
+> But in this way, you found there are **two conflict**, but in GitHub, there should be only **one conflict** ???
+> 
+> Finally, you [**Boss**](https://github.com/JinHai-CN) told you how to do it **right**:
 
-#### Day one:
+```shell
+git remote add whhe git@github.com:whhe/ragflow
+git fetch whhe
+git checkout upstream/main
+git merge whhe/feat-bedrock-api-key-auth
+```
+
+> Like dude, what fk is this bro?
+
+This was basically my experience while interning on **[infiniflow/ragflow](https://github.com/infiniflow/ragflow)**.
+And that **PR review** is [**here**](https://github.com/infiniflow/ragflow/pull/18301#pullrequestreview-4992126462)
+
+To be honest, I only know 
 
 ```bash
 git clone ...
-```
-
-Easy.
-
----
-
-#### Day two:
-
-```bash
-git checkout -b feat/something
-```
-
-Still easy.
-
----
-
-#### Then one day, your mentor walks over:
-
-> "Main has moved forward. Rebase your commits onto the latest main,  
-> resolve the conflicts, and update your remote branch safely."
-
-You:
-
-> "Sure."
-
-Your brain:
-
-> **What the hell is a rebase?**
-
-So you search Google, Stack Overflow, GitHub — or just ask **`ChatGPT`**.
-
-A minute later, you somehow end up with:
-
-```bash
-git fetch origin
-git rebase origin/main
-
-# resolve conflicts...
-
 git add .
-git rebase --continue
-git push --force-with-lease
+git commit -m ""
+git push # I like to use `--force`, although I know the consequence :)
 ```
 
-It works!!!
-
-For a brief moment, you think you understand Git.
-
-----
-
-#### Until the next day:
-
-> "Remove yesterday's commit, but keep the changes in your working tree."
-
-You stare at the terminal.
-
-```bash
-git reset ???
-```
-
-`--soft`? `--mixed`? `--hard`?
-
-And somehow you're back to searching:
-
-> **difference between git reset soft mixed hard**
-
----
-
-This was basically my experience while interning on **[infiniflow/ragflow](https://github.com/infiniflow/ragflow)**.
-
-Git doesn't have a shortage of commands.  
-If anything, it has **way too many of them**.
-
-Usually, the problem isn't:
-
-> "I don't know what I want to do."
-
-It's:
-
-> "I know exactly what I want to do.  
-> I just don't know what that damn Git command is called."
-
-So I built **Gogit** — because memorizing Git commands shouldn't be part of the job.
-At least not for a beginner
+before my internship in [**Infiniflow**](https://github.com/infiniflow)
 
 ---
 
